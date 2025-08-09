@@ -14,11 +14,11 @@ type Task struct {
 type User struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name"`
-	Password string `json:"password"`
+	Password []byte `json:"password"`
 	Tasks    []Task `json:"tasks,omitempty"`
 }
 
-func (u *User) CreateUser(name, password string) User {
+func (u *User) CreateUser(name string, password []byte) User {
 	return User{
 		ID:       time.Now().Nanosecond(),
 		Name:     name,

@@ -7,6 +7,7 @@ import (
 	s "task-tracker/storage"
 	u "task-tracker/user"
 
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
 )
 
@@ -38,28 +39,27 @@ func UChoice() (int, error) {
 	return choice, nil
 }
 
-func GetNamePass() (string, string, error) {
-	var name, password string
+func GetNamePass() (string, []byte, error) {
+	var name string
 
 	fmt.Println("Enter your name:")
 	_, err := fmt.Scanln(&name)
 	if err != nil {
-		return "", "", fmt.Errorf("error reading name: %v", err)
+		return "", nil, fmt.Errorf("error reading name: %v", err)
 	}
 
 	fmt.Println("Enter your password:")
 	bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 	if err != nil {
-		return "", "", fmt.Errorf("error reading password: %v", err)
+		return "", nil, fmt.Errorf("error reading password: %v", err)
 	}
 
-	password = string(bytePassword)
-	if len(password) < 3 {
+	if len(bytePassword) < 3 {
 		fmt.Println("Password must be at least 3 characters long.")
-		return "", "", fmt.Errorf("password too short")
+		return "", nil, fmt.Errorf("password too short")
 	}
 
-	return name, password, nil
+	return name, bytePassword, nil
 }
 
 func GetTaskNameDesc() (string, string, error) {
@@ -83,8 +83,13 @@ func CreateUser() (*u.User, error) {
 		return nil, fmt.Errorf("error getting name and password: %v", err)
 	}
 
+	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("error hashing password: %v", err)
+	}
+
 	var newUser u.User
-	newUser = newUser.CreateUser(name, password)
+	newUser = newUser.CreateUser(name, hashedPassword)
 
 	// Check if the user already exists
 	for _, user := range s.GUsers {
@@ -105,7 +110,8 @@ func LogInUser() (*u.User, error) {
 	}
 
 	for _, user := range s.GUsers {
-		if user.Name == name && user.Password == password {
+		err = bcrypt.CompareHashAndPassword(user.Password, password)
+		if user.Name == name && err == nil {
 			return &user, nil
 		}
 	}
@@ -119,7 +125,8 @@ func DeleteUser() (*u.User, error) {
 	}
 
 	for i, user := range s.GUsers {
-		if user.Name == name && user.Password == password {
+		err = bcrypt.CompareHashAndPassword(user.Password, password)
+		if user.Name == name && err == nil {
 			s.GUsers = append(s.GUsers[:i], s.GUsers[i+1:]...)
 			return &user, nil
 		}
@@ -139,4 +146,12 @@ func PrintAllTasks(currentUser u.User) {
 		fmt.Printf("%d. %s Status: %s \n\tDescription: %s\n\tDate: %s\n", i+1, task.Title, status,
 			task.Description, task.Date)
 	}
+}
+
+func getHashedPassw(err error, bytePassword []byte) ([]byte, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("error hashing password: %v", err)
+	}
+	return hashedPassword, nil
 }
