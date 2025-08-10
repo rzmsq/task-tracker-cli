@@ -62,7 +62,7 @@ func WelcomeMenuLoop() (currentUser *u.User, isLoggedIn bool) {
 				fmt.Println("Error creating user:", err)
 				break
 			}
-			fmt.Printf("User created successfully! ID: %d, Name: %s\n", currentUser.ID, currentUser.Name)
+			fmt.Printf("User created successfully! ID: %s, Name: %s\n", currentUser.ID.String(), currentUser.Name)
 			isLoggedIn = true
 		case consts.LogIn:
 			currentUser, err = cli.LogInUser()
@@ -70,7 +70,7 @@ func WelcomeMenuLoop() (currentUser *u.User, isLoggedIn bool) {
 				fmt.Println("Error creating user:", err)
 				break
 			}
-			fmt.Printf("Log in successfully! ID: %d, Name: %s\n", currentUser.ID, currentUser.Name)
+			fmt.Printf("Log in successfully! ID: %s, Name: %s\n", currentUser.ID.String(), currentUser.Name)
 			isLoggedIn = true
 		case consts.DeleteUser:
 			currentUser, err = cli.DeleteUser()
@@ -78,7 +78,7 @@ func WelcomeMenuLoop() (currentUser *u.User, isLoggedIn bool) {
 				fmt.Println("Error deleting user:", err)
 				break
 			}
-			fmt.Printf("User deleted successfully! ID: %d, Name: %s\n", currentUser.ID, currentUser.Name)
+			fmt.Printf("User deleted successfully! ID: %s, Name: %s\n", currentUser.ID.String(), currentUser.Name)
 		case consts.Exit:
 			err = s.SaveToFile()
 			if err != nil {
@@ -113,9 +113,12 @@ func MainMenuLoop(currentUser *u.User) bool {
 			// Check if the task title already exists for the current user
 			for _, task := range currentUser.Tasks {
 				if task.Title == title {
-					fmt.Println("Task with this title already exists. Please choose a different title.")
-					continue
+					err = fmt.Errorf("task with title '%s' already exists", title)
 				}
+			}
+			if err != nil {
+				fmt.Println("Error:", err)
+				continue
 			}
 			task := u.Task{
 				Title:       title,

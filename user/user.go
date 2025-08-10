@@ -1,7 +1,7 @@
 package user
 
 import (
-	"time"
+	"github.com/google/uuid"
 )
 
 type Task struct {
@@ -12,15 +12,15 @@ type Task struct {
 }
 
 type User struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Password []byte `json:"password"`
-	Tasks    []Task `json:"tasks,omitempty"`
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Password []byte    `json:"password"`
+	Tasks    []Task    `json:"tasks,omitempty"`
 }
 
 func (u *User) CreateUser(name string, password []byte) User {
 	return User{
-		ID:       time.Now().Nanosecond(),
+		ID:       uuid.New(),
 		Name:     name,
 		Password: password,
 	}

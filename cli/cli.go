@@ -147,11 +147,3 @@ func PrintAllTasks(currentUser u.User) {
 			task.Description, task.Date)
 	}
 }
-
-func getHashedPassw(err error, bytePassword []byte) ([]byte, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword(bytePassword, bcrypt.DefaultCost)
-	if err != nil {
-		return nil, fmt.Errorf("error hashing password: %v", err)
-	}
-	return hashedPassword, nil
-}
